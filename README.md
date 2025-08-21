@@ -1,1 +1,1 @@
-# Golang-course
+# Bootcamp-Avanade
