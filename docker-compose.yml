@@ -3,23 +3,41 @@ version: '3.8'
 services:
   agenda-api:
     build:
-      context: .
-      dockerfile: AgendaAPI/Dockerfile
+      context: ./AgendaAPI/AgendaAPI
+      dockerfile: Dockerfile/Dockerfile
     ports:
       - "5000:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__AgendaDatabase=Server=db;Database=AgendaDB;User=sa;Password=Your_password123;TrustServerCertificate=true
     depends_on:
+      - db
       - rabbitmq
 
   agenda-frontend:
     build:
-      context: ./AgendaFrontend
-      dockerfile: Dockerfile
+      context: ./AgendaFrontend/agenda-frontend
+      dockerfile: Dockerfile/Dockerfile
+      target: development
     ports:
-      - "8080:80"
+      - "8080:8080"
+    volumes:
+      - ./AgendaFrontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_BASE_URL=http://localhost:5000
     depends_on:
       - agenda-api
+
+  db:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    environment:
+      - SA_PASSWORD=Your_password123
+      - ACCEPT_EULA=Y
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -31,4 +49,4 @@ services:
       - RABBITMQ_DEFAULT_PASS=guest
 
 volumes:
-  rabbitmq-data:
+  sql_data:
