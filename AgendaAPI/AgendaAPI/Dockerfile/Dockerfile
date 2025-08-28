@@ -1,13 +1,13 @@
 FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
 WORKDIR /app
 EXPOSE 80
+EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY ["AgendaAPI/AgendaAPI.csproj", "AgendaAPI/"]
-RUN dotnet restore "AgendaAPI/AgendaAPI.csproj"
+COPY ["AgendaAPI.csproj", "."]
+RUN dotnet restore "AgendaAPI.csproj"
 COPY . .
-WORKDIR "/src/AgendaAPI"
 RUN dotnet build "AgendaAPI.csproj" -c Release -o /app/build
 
 FROM build AS publish
