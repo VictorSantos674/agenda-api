@@ -11,6 +11,7 @@
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "types": ["node"],
-    "allowJs": true
+    "allowJs": true,
+    "noEmit": true
   }
 }
