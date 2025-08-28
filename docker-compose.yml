@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  agenda-api:
+    build:
+      context: .
+      dockerfile: AgendaAPI/Dockerfile
+    ports:
+      - "5000:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - rabbitmq
+
+  agenda-frontend:
+    build:
+      context: ./AgendaFrontend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - agenda-api
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+
+volumes:
+  rabbitmq-data:
