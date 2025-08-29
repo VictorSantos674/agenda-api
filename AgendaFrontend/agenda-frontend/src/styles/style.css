@@ -1,0 +1,58 @@
+:root {
+  --green-100: #d1fae5;
+  --green-700: #047857;
+  --red-100: #fee2e2;
+  --red-700: #b91c1c;
+  --yellow-100: #fef3c7;
+  --yellow-700: #b45309;
+  --blue-100: #dbeafe;
+  --blue-700: #1d4ed8;
+}
+
+.p-toast-message {
+  animation: toastSlideIn 0.3s ease-out;
+}
+
+@keyframes toastSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.layout-wrapper {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.toolbar {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.layout-content {
+  padding: 2rem;
+}
+
+.main-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.contato-list {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.field label {
+  color: #495057;
+  font-weight: 600;
+}
