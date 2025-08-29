@@ -35,20 +35,75 @@
             <i class="pi pi-users mr-2"></i>
             Lista de Contatos
             <Badge 
-              v-if="contatos.length" 
-              :value="contatos.length" 
+              v-if="filteredContatos.length" 
+              :value="filteredContatos.length" 
               class="ml-2" 
             />
           </div>
         </template>
         <template #content>
+          <!-- Filtros Section -->
+          <div class="filters-section mb-4">
+            <div class="grid">
+              <div class="col-12 md:col-4">
+                <span class="p-input-icon-left">
+                  <i class="pi pi-search" />
+                  <InputText 
+                    v-model="filters.search" 
+                    placeholder="Buscar contatos..." 
+                    class="w-full"
+                    @input="handleFilterChange"
+                  />
+                </span>
+              </div>
+              <div class="col-12 md:col-4">
+                <Dropdown 
+                  v-model="filters.sortBy" 
+                  :options="sortOptions" 
+                  optionLabel="label"
+                  placeholder="Ordenar por..." 
+                  class="w-full"
+                  @change="handleFilterChange"
+                />
+              </div>
+              <div class="col-12 md:col-4">
+                <Button 
+                  icon="pi pi-filter-slash" 
+                  label="Limpar filtros" 
+                  class="p-button-outlined w-full"
+                  @click="clearFilters"
+                  :disabled="!hasActiveFilters"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Loading State -->
           <div v-if="loading" class="loading-state">
             <i class="pi pi-spin pi-spinner mr-2"></i>
             Carregando contatos...
           </div>
+
+          <!-- Empty State -->
+          <div v-else-if="!filteredContatos.length" class="empty-state">
+            <i class="pi pi-inbox text-4xl mb-3"></i>
+            <p class="text-color-secondary">
+              {{ hasActiveFilters ? 'Nenhum contato encontrado com os filtros aplicados' : 'Nenhum contato cadastrado' }}
+            </p>
+            <Button 
+              v-if="hasActiveFilters"
+              icon="pi pi-filter-slash" 
+              label="Limpar filtros" 
+              class="p-button-text mt-3"
+              @click="clearFilters"
+            />
+          </div>
+
+          <!-- Data Table -->
           <ContatoList 
             v-else
-            :contatos="contatos" 
+            :contatos="filteredContatos" 
+            :loading="loading"
             @edit="editContato" 
             @delete="confirmDelete" 
           />
@@ -69,7 +124,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 export default {
@@ -82,12 +137,62 @@ export default {
   setup() {
     const router = useRouter()
     const toast = ref()
+    
+    // States
     const contatos = ref([])
     const loading = ref(false)
     const formLoading = ref(false)
     const displayDialog = ref(false)
     const selectedContato = ref(null)
+    
+    // Filters
+    const filters = ref({
+      search: '',
+      sortBy: null
+    })
 
+    const sortOptions = ref([
+      { label: 'Nome A-Z', value: 'nome-asc' },
+      { label: 'Nome Z-A', value: 'nome-desc' },
+      { label: 'Email A-Z', value: 'email-asc' },
+      { label: 'Email Z-A', value: 'email-desc' }
+    ])
+
+    // Computed
+    const filteredContatos = computed(() => {
+      let result = [...contatos.value]
+      
+      // Filtro de busca
+      if (filters.value.search) {
+        const searchLower = filters.value.search.toLowerCase()
+        result = result.filter(contato =>
+          contato.nome.toLowerCase().includes(searchLower) ||
+          contato.email.toLowerCase().includes(searchLower) ||
+          contato.telefone.includes(searchLower)
+        )
+      }
+      
+      // Ordenação
+      if (filters.value.sortBy) {
+        const [field, order] = filters.value.sortBy.value.split('-')
+        result.sort((a, b) => {
+          const valueA = a[field]?.toLowerCase() || ''
+          const valueB = b[field]?.toLowerCase() || ''
+          
+          return order === 'asc' 
+            ? valueA.localeCompare(valueB) 
+            : valueB.localeCompare(valueA)
+        })
+      }
+      
+      return result
+    })
+
+    const hasActiveFilters = computed(() => {
+      return filters.value.search !== '' || filters.value.sortBy !== null
+    })
+
+    // Methods
     const loadContatos = async () => {
       loading.value = true
       try {
@@ -95,10 +200,12 @@ export default {
         await new Promise(resolve => setTimeout(resolve, 1000))
         contatos.value = [
           { id: 1, nome: 'João Silva', email: 'joao@email.com', telefone: '11999999999' },
-          { id: 2, nome: 'Maria Santos', email: 'maria@email.com', telefone: '11999999998' }
+          { id: 2, nome: 'Maria Santos', email: 'maria@email.com', telefone: '11999999998' },
+          { id: 3, nome: 'Pedro Oliveira', email: 'pedro@email.com', telefone: '11999999997' },
+          { id: 4, nome: 'Ana Costa', email: 'ana@email.com', telefone: '11999999996' }
         ]
       } catch (error) {
-        toast.value.showError('Erro ao carregar contatos')
+        toast.value?.showError('Erro ao carregar contatos')
       } finally {
         loading.value = false
       }
@@ -108,28 +215,75 @@ export default {
       formLoading.value = true
       try {
         await new Promise(resolve => setTimeout(resolve, 1500))
-        toast.value.showSuccess('Contato salvo com sucesso!')
+        toast.value?.showSuccess('Contato salvo com sucesso!')
         displayDialog.value = false
-        await loadContatos() // Recarregar lista
+        await loadContatos()
       } catch (error) {
-        toast.value.showError('Erro ao salvar contato')
+        toast.value?.showError('Erro ao salvar contato')
       } finally {
         formLoading.value = false
       }
     }
 
+    const openNew = () => {
+      selectedContato.value = {}
+      displayDialog.value = true
+    }
+
+    const editContato = (contato) => {
+      selectedContato.value = { ...contato }
+      displayDialog.value = true
+    }
+
+    const confirmDelete = (contato) => {
+      // Implementar confirmação de exclusão
+      console.log('Deletar contato:', contato)
+    }
+
+    const handleFilterChange = () => {
+      // Filtro é aplicado automaticamente via computed
+    }
+
+    const clearFilters = () => {
+      filters.value = {
+        search: '',
+        sortBy: null
+      }
+    }
+
+    const closeDialog = () => {
+      displayDialog.value = false
+      selectedContato.value = null
+    }
+
+    // Lifecycle
     onMounted(() => {
       loadContatos()
     })
 
     return {
+      // Refs
       contatos,
       loading,
       formLoading,
       displayDialog,
       selectedContato,
+      filters,
+      sortOptions,
+      
+      // Computed
+      filteredContatos,
+      hasActiveFilters,
+      
+      // Methods
       loadContatos,
-      saveContato
+      saveContato,
+      openNew,
+      editContato,
+      confirmDelete,
+      handleFilterChange,
+      clearFilters,
+      closeDialog
     }
   }
 }
@@ -150,5 +304,21 @@ export default {
   justify-content: center;
   padding: 2rem;
   color: var(--text-color-secondary);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+}
+
+.filters-section {
+  background: var(--surface-50);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--surface-200);
 }
 </style>
