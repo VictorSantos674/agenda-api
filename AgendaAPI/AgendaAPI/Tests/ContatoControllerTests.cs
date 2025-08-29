@@ -1,23 +1,24 @@
-using Xunit;
+using Microsoft.AspNetCore.Mvc;
 using Moq;
 using AgendaAPI.Controllers;
 using AgendaAPI.Models;
-using AgendaAPI.Repositories;
-using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using AgendaAPI.Services;
+using FluentValidation;
+using Xunit;
 
 namespace AgendaAPI.Tests
 {
     public class ContatoControllerTests
     {
-        private readonly Mock<IContatoRepository> _mockRepo;
+        private readonly Mock<IContatoService> _mockService;
+        private readonly Mock<IValidator<Contato>> _mockValidator;
         private readonly ContatoController _controller;
 
         public ContatoControllerTests()
         {
-            _mockRepo = new Mock<IContatoRepository>();
-            _controller = new ContatoController(_mockRepo.Object);
+            _mockService = new Mock<IContatoService>();
+            _mockValidator = new Mock<IValidator<Contato>>();
+            _controller = new ContatoController(_mockService.Object, _mockValidator.Object);
         }
 
         [Fact]
@@ -30,15 +31,24 @@ namespace AgendaAPI.Tests
                 new Contato { Id = 2, Nome = "Teste 2", Email = "test2@email.com", Telefone = "11999999998" }
             };
             
-            _mockRepo.Setup(repo => repo.GetAllAsync()).ReturnsAsync(contatos);
+            _mockService.Setup(service => service.GetAllAsync()).ReturnsAsync(contatos);
 
-            // Act
-            var result = await _controller.GetAll();
+            var result = await _controller.GetAll(); // Act
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
             var returnValue = Assert.IsType<List<Contato>>(okResult.Value);
             Assert.Equal(2, returnValue.Count);
+        }
+
+        [Fact]
+        public async Task GetById_ReturnsNotFound_WhenContatoDoesNotExist()
+        {
+            _mockService.Setup(service => service.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((Contato?)null); // Arrange
+
+            var result = await _controller.GetById(1); // Act
+
+            Assert.IsType<NotFoundResult>(result); // Assert
         }
     }
 }
