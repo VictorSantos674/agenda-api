@@ -52,7 +52,7 @@
                     v-model="filters.search" 
                     placeholder="Buscar contatos..." 
                     class="w-full"
-                    @input="handleFilterChange"
+                    @input="handleSearch"
                   />
                 </span>
               </div>
@@ -126,6 +126,7 @@
 <script>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useContatoStore } from '../stores/contatoStore'
 
 export default {
   name: 'ContatoListView',
@@ -137,15 +138,14 @@ export default {
   setup() {
     const router = useRouter()
     const toast = ref()
+    const contatoStore = useContatoStore()
     
-    // States
-    const contatos = ref([])
-    const loading = ref(false)
+    // Estados locais
     const formLoading = ref(false)
     const displayDialog = ref(false)
     const selectedContato = ref(null)
     
-    // Filters
+    // Filtros
     const filters = ref({
       search: '',
       sortBy: null
@@ -160,15 +160,15 @@ export default {
 
     // Computed
     const filteredContatos = computed(() => {
-      let result = [...contatos.value]
+      let result = [...contatoStore.contatos]
       
-      // Filtro de busca
+      // Filtro de busca local (fallback se a busca da API falhar)
       if (filters.value.search) {
         const searchLower = filters.value.search.toLowerCase()
         result = result.filter(contato =>
-          contato.nome.toLowerCase().includes(searchLower) ||
-          contato.email.toLowerCase().includes(searchLower) ||
-          contato.telefone.includes(searchLower)
+          contato.nome?.toLowerCase().includes(searchLower) ||
+          contato.email?.toLowerCase().includes(searchLower) ||
+          contato.telefone?.includes(searchLower)
         )
       }
       
@@ -192,34 +192,32 @@ export default {
       return filters.value.search !== '' || filters.value.sortBy !== null
     })
 
-    // Methods
+    const loading = computed(() => contatoStore.loading)
+
+    // Métodos
     const loadContatos = async () => {
-      loading.value = true
       try {
-        // Simular chamada API
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        contatos.value = [
-          { id: 1, nome: 'João Silva', email: 'joao@email.com', telefone: '11999999999' },
-          { id: 2, nome: 'Maria Santos', email: 'maria@email.com', telefone: '11999999998' },
-          { id: 3, nome: 'Pedro Oliveira', email: 'pedro@email.com', telefone: '11999999997' },
-          { id: 4, nome: 'Ana Costa', email: 'ana@email.com', telefone: '11999999996' }
-        ]
+        await contatoStore.loadContatos()
       } catch (error) {
         toast.value?.showError('Erro ao carregar contatos')
-      } finally {
-        loading.value = false
       }
     }
 
-    const saveContato = async (contato) => {
+    const saveContato = async (contatoData) => {
       formLoading.value = true
       try {
-        await new Promise(resolve => setTimeout(resolve, 1500))
-        toast.value?.showSuccess('Contato salvo com sucesso!')
+        if (contatoData.id) {
+          await contatoStore.updateContato(contatoData.id, contatoData)
+          toast.value?.showSuccess('Contato atualizado com sucesso!')
+        } else {
+          await contatoStore.addContato(contatoData)
+          toast.value?.showSuccess('Contato criado com sucesso!')
+        }
         displayDialog.value = false
-        await loadContatos()
+        await loadContatos() // Recarregar a lista após salvar
       } catch (error) {
-        toast.value?.showError('Erro ao salvar contato')
+        const errorMsg = error.response?.data?.message || 'Erro ao salvar contato'
+        toast.value?.showError(errorMsg)
       } finally {
         formLoading.value = false
       }
@@ -235,13 +233,33 @@ export default {
       displayDialog.value = true
     }
 
-    const confirmDelete = (contato) => {
-      // Implementar confirmação de exclusão
-      console.log('Deletar contato:', contato)
+    const confirmDelete = async (contato) => {
+      try {
+        if (confirm(`Tem certeza que deseja excluir ${contato.nome}?`)) {
+          await contatoStore.deleteContato(contato.id)
+          toast.value?.showSuccess('Contato excluído com sucesso!')
+        }
+      } catch (error) {
+        const errorMsg = error.response?.data?.message || 'Erro ao excluir contato'
+        toast.value?.showError(errorMsg)
+      }
+    }
+
+    const handleSearch = async () => {
+      if (filters.value.search) {
+        try {
+          await contatoStore.searchContatos(filters.value.search)
+        } catch (error) {
+          // Fallback para busca local se a API falhar
+          console.log('Busca API falhou, usando filtro local')
+        }
+      } else {
+        await loadContatos()
+      }
     }
 
     const handleFilterChange = () => {
-      // Filtro é aplicado automaticamente via computed
+      // A ordenação é aplicada automaticamente via computed
     }
 
     const clearFilters = () => {
@@ -249,6 +267,7 @@ export default {
         search: '',
         sortBy: null
       }
+      loadContatos() // Recarregar todos os contatos
     }
 
     const closeDialog = () => {
@@ -263,8 +282,6 @@ export default {
 
     return {
       // Refs
-      contatos,
-      loading,
       formLoading,
       displayDialog,
       selectedContato,
@@ -274,6 +291,7 @@ export default {
       // Computed
       filteredContatos,
       hasActiveFilters,
+      loading,
       
       // Methods
       loadContatos,
@@ -281,6 +299,7 @@ export default {
       openNew,
       editContato,
       confirmDelete,
+      handleSearch,
       handleFilterChange,
       clearFilters,
       closeDialog
