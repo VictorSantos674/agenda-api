@@ -1,6 +1,7 @@
 using AgendaAPI.Models;
 using AgendaAPI.Services;
 using Microsoft.EntityFrameworkCore;
+using BCrypt.Net;
 
 namespace AgendaAPI.Data
 {
@@ -27,7 +28,17 @@ namespace AgendaAPI.Data
             // Initialize default user if needed
             if (!context.Usuarios.Any())
             {
-                // User will be created by the AuthService in Program.cs
+                var usuario = new Usuario
+                {
+                    Nome = "Administrador",
+                    Email = "admin@agenda.com",
+                    SenhaHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
+                    DataCriacao = DateTime.UtcNow
+                };
+
+                context.Usuarios.Add(usuario);
+                context.SaveChanges();
+                Console.WriteLine("Usuário padrão criado: admin@agenda.com / Admin@123");
             }
         }
     }
