@@ -3,6 +3,7 @@ using AgendaAPI.Models;
 using AgendaAPI.Services;
 using AgendaAPI.Commands;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AgendaAPI.Controllers
 {
