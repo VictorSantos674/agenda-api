@@ -130,22 +130,6 @@ using (var scope = app.Services.CreateScope()) // Initialize database
 {
     var context = scope.ServiceProvider.GetRequiredService<AgendaContext>();
     DbInitializer.Initialize(context);
-    
-    var authService = scope.ServiceProvider.GetRequiredService<IAuthService>(); // Initialize default user for testing
-    try
-    {
-        var defaultUser = new Usuario 
-        { 
-            Nome = "Administrador", 
-            Email = "admin@agenda.com" 
-        };
-        await authService.RegistrarAsync(defaultUser, "Admin@123");
-        Console.WriteLine("Usuário padrão criado: admin@agenda.com / Admin@123");
-    }
-    catch (InvalidOperationException)
-    {
-        Console.WriteLine("Usuário padrão já existe");
-    }
 }
 
 if (app.Environment.IsDevelopment()) // Configure the HTTP request pipeline.
