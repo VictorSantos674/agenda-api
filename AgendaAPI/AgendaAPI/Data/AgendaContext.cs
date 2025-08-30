@@ -8,11 +8,14 @@ namespace AgendaAPI.Data
         public AgendaContext(DbContextOptions<AgendaContext> options) : base(options) { }
 
         public DbSet<Contato> Contatos { get; set; }
+        public DbSet<Usuario> Usuarios { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Contato>().HasIndex(c => c.Email).IsUnique();
             modelBuilder.Entity<Contato>().HasIndex(c => c.Telefone).IsUnique();
+
+            modelBuilder.Entity<Usuario>().HasIndex(u => u.Email).IsUnique();
         }
     }
 }
