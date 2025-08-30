@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using AgendaAPI.Models;
 using AgendaAPI.Services;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace AgendaAPI.Controllers
 {
