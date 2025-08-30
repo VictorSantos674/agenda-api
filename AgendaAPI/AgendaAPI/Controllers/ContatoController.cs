@@ -8,6 +8,7 @@ namespace AgendaAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ContatoController : ControllerBase
     {
         private readonly IContatoService _contatoService;
