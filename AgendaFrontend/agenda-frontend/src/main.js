@@ -6,14 +6,11 @@ import PrimeVue from 'primevue/config'
 import ToastService from 'primevue/toastservice'
 import Tooltip from 'primevue/tooltip'
 
-// Theme and styles
-import 'primevue/resources/themes/saga-blue/theme.css'
-import 'primevue/resources/primevue.min.css'
-import 'primeicons/primeicons.css'
-import 'primeflex/primeflex.css'
-import './styles/style.css'
+// ✅ CORREÇÃO: Importe os estilos DO SEU PRÓPRIO PROJETO
+// Remova qualquer referência a unpkg.com ou CDN externo
+import '@/styles/primevue-styles.css'  // Criaremos este arquivo
 
-// PrimeVue components
+// ✅ Importe os componentes PrimeVue individualmente
 import Button from 'primevue/button'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -43,7 +40,7 @@ app.use(ToastService)
 // Directives
 app.directive('tooltip', Tooltip)
 
-// Global components
+// ✅ Registro manual de componentes (evita auto-import)
 app.component('Button', Button)
 app.component('DataTable', DataTable)
 app.component('Column', Column)
@@ -58,12 +55,4 @@ app.component('Dropdown', Dropdown)
 app.component('Password', Password)
 app.component('Divider', Divider)
 
-// Global error handler
-app.config.errorHandler = (err, vm, info) => {
-  console.error('Global error:', err, info)
-}
-
 app.mount('#app')
-
-// Export the app instance for potential use elsewhere
-export default app

@@ -2,130 +2,13 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#667eea" />
-    <meta name="description" content="Sistema profissional de agenda de contatos desenvolvido com Vue.js e .NET 6" />
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://agenda-app.com/" />
-    <meta property="og:title" content="Agenda de Contatos - Sistema Profissional" />
-    <meta property="og:description" content="Gerencie seus contatos de forma eficiente com nossa agenda moderna e responsiva" />
-    <meta property="og:image" content="/social-preview.png" />
-
-    <!-- Preload critical resources -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <link rel="preload" href="https://unpkg.com/primeicons/primeicons.css" as="style">
-    
-    <title>Agenda de Contatos - Carregando...</title>
-
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        color: #2c3e50;
-        line-height: 1.6;
-        overflow-x: hidden;
-      }
-
-      #app {
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .loading-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      }
-
-      .loading-spinner {
-        width: 50px;
-        height: 50px;
-        border: 3px solid rgba(255, 255, 255, 0.3);
-        border-radius: 50%;
-        border-top-color: #fff;
-        animation: spin 1s ease-in-out infinite;
-      }
-
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
-      .loading-text {
-        margin-top: 20px;
-        color: white;
-        font-weight: 500;
-        text-align: center;
-      }
-
-      #app:not([data-loaded]) {
-        opacity: 0;
-        transition: opacity 0.3s ease-in-out;
-      }
-
-      #app[data-loaded] {
-        opacity: 1;
-      }
-
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-
-      ::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 4px;
-      }
-
-      ::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 4px;
-      }
-
-      ::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.5);
-      }
-    </style>
+    <title>Agenda de Contatos</title>
+    <!-- ✅ REMOVA QUALQUER LINK PARA UNPKG.COM AQUI -->
   </head>
   <body>
-    <div id="app">
-      <div class="loading-container">
-        <div>
-          <div class="loading-spinner"></div>
-          <div class="loading-text">Carregando Agenda...</div>
-        </div>
-      </div>
-    </div>
-    
+    <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
-    
-    <script>
-      window.addEventListener('load', function() {
-        setTimeout(() => {
-          const app = document.getElementById('app')
-          const loading = document.querySelector('.loading-container')
-          if (loading) {
-            loading.remove()
-          }
-          app.setAttribute('data-loaded', 'true')
-        }, 500)
-      })
-    </script>
   </body>
 </html>
