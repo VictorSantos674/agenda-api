@@ -1,10 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 
-// Importações lazy para melhor performance
-const LoginForm = () => import('../components/LoginForm.vue')
-const RegisterForm = () => import('../components/RegisterForm.vue')
-const ContatoListView = () => import('../views/ContatoListView.vue')
+// Importações diretas para evitar problemas de lazy loading inicial
+import LoginView from '../views/LoginView.vue'
+import RegisterView from '../views/RegisterView.vue'
+import ContatoListView from '../views/ContatoListView.vue'
 
 const routes = [
   {
@@ -15,13 +15,13 @@ const routes = [
   {
     path: '/login',
     name: 'login',
-    component: LoginForm,
+    component: LoginView,
     meta: { requiresAuth: false, hideHeader: true }
   },
   {
     path: '/register',
     name: 'register',
-    component: RegisterForm,
+    component: RegisterView,
     meta: { requiresAuth: false, hideHeader: true }
   },
   {
@@ -43,46 +43,30 @@ const router = createRouter({
     if (savedPosition) {
       return savedPosition
     } else {
-      return { top: 0, behavior: 'smooth' }
+      return { top: 0 }
     }
   }
 })
 
 // Guard global de autenticação
-router.beforeEach(async (to, from, next) => {
-  const authStore = useAuthStore()
-  
-  // Inicializar autenticação se necessário
-  if (!authStore.isAuthenticated) {
-    authStore.initAuth()
-  }
-
-  // Verificar se a rota requer autenticação
+router.beforeEach((to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
-  
-  // Se a rota requer autenticação e o usuário não está autenticado
-  if (requiresAuth && !authStore.isAuthenticated) {
+  const authStore = useAuthStore()
+  const isAuthenticated = authStore.isAuthenticated
+
+  if (requiresAuth && !isAuthenticated) {
     next({ name: 'login', query: { redirect: to.fullPath } })
-  } 
-  // Se o usuário está autenticado e tenta acessar login/register
-  else if ((to.name === 'login' || to.name === 'register') && authStore.isAuthenticated) {
+  } else if ((to.name === 'login' || to.name === 'register') && isAuthenticated) {
     next({ name: 'contatos' })
-  }
-  // Caso contrário, permitir acesso
-  else {
+  } else {
     next()
   }
 })
 
 // Atualizar título da página
 router.afterEach((to) => {
-  const title = to.meta.title || 'Agenda de Contatos'
+  const title = to.meta.title || 'Agenda Blue Technology'
   document.title = title
-})
-
-// Handler de errors de navegação
-router.onError((error) => {
-  console.error('Router error:', error)
 })
 
 export default router

@@ -131,20 +131,21 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useContatoStore } from '../stores/contatoStore'
-import { useAuthStore } from '../stores/authStore' // ← Importar auth store
+import { useAuthStore } from '../stores/authStore'
+import { useToast } from 'primevue/usetoast'
 
 export default {
   name: 'ContatoListView',
   components: {
-    ContatoList: () => import('../components/ContatoList.vue'),
-    ContatoForm: () => import('../components/ContatoForm.vue'),
-    NotificationToast: () => import('../components/NotificationToast.vue')
+    ContatoList: () => import('../components/contatos/ContatoList.vue'),
+    ContatoForm: () => import('../components/contatos/ContatoForm.vue'),
+    NotificationToast: () => import('../components/shared/NotificationToast.vue')
   },
   setup() {
     const router = useRouter()
-    const toast = ref()
+    const toast = useToast()
     const contatoStore = useContatoStore()
-    const authStore = useAuthStore() // ← Inicializar auth store
+    const authStore = useAuthStore()
     
     // Estados locais
     const formLoading = ref(false)
@@ -205,17 +206,25 @@ export default {
       try {
         await contatoStore.loadContatos()
       } catch (error) {
-        if (toast.value) {
-          const errorMsg = error.response?.data?.message || 'Erro ao carregar contatos'
-          
-          // Se for erro de autenticação, redirecionar para login
-          if (error.response?.status === 401) {
-            toast.value.showError('Sessão expirada. Faça login novamente.')
-            authStore.logout()
-            router.push('/login')
-          } else {
-            toast.value.showError(errorMsg)
-          }
+        const errorMsg = error.response?.data?.message || 'Erro ao carregar contatos'
+        
+        // Se for erro de autenticação, redirecionar para login
+        if (error.response?.status === 401) {
+          toast.add({
+            severity: 'error',
+            summary: 'Sessão expirada',
+            detail: 'Faça login novamente',
+            life: 5000
+          })
+          authStore.logout()
+          router.push('/login')
+        } else {
+          toast.add({
+            severity: 'error',
+            summary: 'Erro',
+            detail: errorMsg,
+            life: 5000
+          })
         }
       }
     }
@@ -225,10 +234,20 @@ export default {
       try {
         if (contatoData.id) {
           await contatoStore.updateContato(contatoData.id, contatoData)
-          if (toast.value) toast.value.showSuccess('Contato atualizado com sucesso!')
+          toast.add({
+            severity: 'success',
+            summary: 'Sucesso',
+            detail: 'Contato atualizado com sucesso!',
+            life: 3000
+          })
         } else {
           await contatoStore.addContato(contatoData)
-          if (toast.value) toast.value.showSuccess('Contato criado com sucesso!')
+          toast.add({
+            severity: 'success',
+            summary: 'Sucesso',
+            detail: 'Contato criado com sucesso!',
+            life: 3000
+          })
         }
         displayDialog.value = false
         await loadContatos()
@@ -237,11 +256,21 @@ export default {
         
         // Se for erro de autenticação, redirecionar para login
         if (error.response?.status === 401) {
-          toast.value.showError('Sessão expirada. Faça login novamente.')
+          toast.add({
+            severity: 'error',
+            summary: 'Sessão expirada',
+            detail: 'Faça login novamente',
+            life: 5000
+          })
           authStore.logout()
           router.push('/login')
         } else {
-          toast.value.showError(errorMsg)
+          toast.add({
+            severity: 'error',
+            summary: 'Erro',
+            detail: errorMsg,
+            life: 5000
+          })
         }
       } finally {
         formLoading.value = false
@@ -262,18 +291,33 @@ export default {
       try {
         if (confirm(`Tem certeza que deseja excluir ${contato.nome}?`)) {
           await contatoStore.deleteContato(contato.id)
-          if (toast.value) toast.value.showSuccess('Contato excluído com sucesso!')
+          toast.add({
+            severity: 'success',
+            summary: 'Sucesso',
+            detail: 'Contato excluído com sucesso!',
+            life: 3000
+          })
         }
       } catch (error) {
         const errorMsg = error.response?.data?.message || 'Erro ao excluir contato'
         
         // Se for erro de autenticação, redirecionar para login
         if (error.response?.status === 401) {
-          toast.value.showError('Sessão expirada. Faça login novamente.')
+          toast.add({
+            severity: 'error',
+            summary: 'Sessão expirada',
+            detail: 'Faça login novamente',
+            life: 5000
+          })
           authStore.logout()
           router.push('/login')
         } else {
-          toast.value.showError(errorMsg)
+          toast.add({
+            severity: 'error',
+            summary: 'Erro',
+            detail: errorMsg,
+            life: 5000
+          })
         }
       }
     }
@@ -326,10 +370,9 @@ export default {
       selectedContato,
       filters,
       sortOptions,
-      toast,
       
       // Stores
-      authStore, // ← Expor authStore para template
+      authStore,
       
       // Computed
       filteredContatos,
