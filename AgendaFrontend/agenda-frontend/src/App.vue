@@ -1,50 +1,18 @@
 <template>
   <div id="app">
+    <Toast position="top-right" />
+    
     <!-- Header apenas se não for página de auth -->
-    <header v-if="!$route.meta.hideHeader" class="app-header">
-      <Toolbar class="toolbar">
-        <template #start>
-          <router-link to="/" class="logo-link">
-            <span class="text-2xl font-bold text-white">📒 Agenda de Contatos</span>
-          </router-link>
-        </template>
-        <template #end>
-          <nav class="nav-links">
-            <span class="text-white mr-4" v-if="authStore.user">
-              Olá, {{ authStore.user.nome }}
-            </span>
-            <Button 
-              v-if="authStore.isAuthenticated"
-              icon="pi pi-sign-out" 
-              label="Sair" 
-              class="p-button-text text-white" 
-              @click="handleLogout"
-              v-tooltip.top="'Sair da conta'"
-            />
-            <router-link 
-              v-else
-              to="/login" 
-              class="nav-link"
-            >
-              <i class="pi pi-sign-in mr-2"></i>
-              Entrar
-            </router-link>
-          </nav>
-        </template>
-      </Toolbar>
-    </header>
-
+    <Navbar v-if="!$route.meta.hideNavbar" />
+    
     <!-- Conteúdo principal -->
-    <main class="app-main" :class="{ 'auth-page': $route.meta.hideHeader }">
+    <main class="app-main" :class="{ 'auth-layout': $route.meta.hideNavbar }">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
           <component :is="Component" />
         </transition>
       </router-view>
     </main>
-
-    <!-- Notification Toast -->
-    <NotificationToast ref="toast" />
 
     <!-- Loading global -->
     <ProgressSpinner 
@@ -56,38 +24,42 @@
 </template>
 
 <script>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from './stores/authStore'
 import { useToast } from 'primevue/usetoast'
-import NotificationToast from './components/NotificationToast.vue'
+import { useAuthStore } from './stores/authStore'
+import Navbar from './components/shared/Navbar.vue'
 
 export default {
   name: 'App',
   components: {
-    NotificationToast
+    Navbar
   },
   setup() {
     const router = useRouter()
-    const authStore = useAuthStore()
     const toast = useToast()
+    const authStore = useAuthStore()
     const globalLoading = ref(false)
+
+    const isAuthenticated = computed(() => {
+      return authStore.isAuthenticated
+    })
 
     // Inicializar autenticação ao carregar o app
     onMounted(() => {
       authStore.initAuth()
-      console.log('App mounted - Auth initialized')
-    })
-
-    // Observar mudanças na autenticação
-    watch(() => authStore.isAuthenticated, (newVal) => {
-      console.log('Auth state changed:', newVal)
+      
+      // Redirecionar para login se não autenticado e tentando acessar rota protegida
+      const requiresAuth = router.currentRoute.value.matched.some(record => record.meta.requiresAuth)
+      if (!authStore.isAuthenticated && requiresAuth) {
+        router.push('/login')
+      }
     })
 
     const handleLogout = async () => {
+      globalLoading.value = true
       try {
-        globalLoading.value = true
-        authStore.logout()
+        await authStore.logout()
         
         toast.add({
           severity: 'success',
@@ -111,6 +83,7 @@ export default {
 
     return {
       authStore,
+      isAuthenticated,
       globalLoading,
       handleLogout
     }
@@ -118,34 +91,30 @@ export default {
 }
 </script>
 
-<style>
-/* Estilos globais */
-#app {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.app-main.auth-page {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+<style scoped>
+.app-main {
+  min-height: calc(100vh - 80px);
   padding: 1rem;
 }
 
-/* Header */
-.app-header {
+.auth-layout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 0;
 }
 
-.toolbar {
-  background: rgba(255, 255, 255, 0.1) !important;
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+.global-spinner {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10000;
 }
 
-/* Transições */
+/* Animações */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;

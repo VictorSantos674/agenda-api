@@ -1,11 +1,5 @@
 <template>
-  <Toast
-    position="top-right"
-    :breakpoints="{
-      '960px': { width: '100%', right: '0', left: '0' }
-    }"
-    group="agenda"
-  >
+  <Toast position="top-right" group="agenda">
     <template #message="slotProps">
       <div class="toast-content">
         <div class="toast-icon" :class="slotProps.message.severity">
@@ -163,7 +157,6 @@ export default {
   background-color: var(--surface-d) !important;
 }
 
-/* Responsividade */
 @media screen and (max-width: 960px) {
   .toast-content {
     min-width: auto;
