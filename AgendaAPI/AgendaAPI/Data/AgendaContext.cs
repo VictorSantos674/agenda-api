@@ -14,7 +14,6 @@ namespace AgendaAPI.Data
         {
             modelBuilder.Entity<Contato>().HasIndex(c => c.Email).IsUnique();
             modelBuilder.Entity<Contato>().HasIndex(c => c.Telefone).IsUnique();
-
             modelBuilder.Entity<Usuario>().HasIndex(u => u.Email).IsUnique();
         }
     }
