@@ -11,6 +11,10 @@
         <span class="text-2xl font-bold text-white">📒 Agenda de Contatos</span>
       </template>
       <template #end>
+        <span class="text-white mr-3" v-if="authStore.user">
+          <i class="pi pi-user mr-1"></i>
+          {{ authStore.user.nome }}
+        </span>
         <Button 
           icon="pi pi-plus" 
           label="Novo Contato" 
@@ -127,6 +131,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useContatoStore } from '../stores/contatoStore'
+import { useAuthStore } from '../stores/authStore' // ← Importar auth store
 
 export default {
   name: 'ContatoListView',
@@ -139,6 +144,7 @@ export default {
     const router = useRouter()
     const toast = ref()
     const contatoStore = useContatoStore()
+    const authStore = useAuthStore() // ← Inicializar auth store
     
     // Estados locais
     const formLoading = ref(false)
@@ -200,7 +206,16 @@ export default {
         await contatoStore.loadContatos()
       } catch (error) {
         if (toast.value) {
-          toast.value.showError('Erro ao carregar contatos')
+          const errorMsg = error.response?.data?.message || 'Erro ao carregar contatos'
+          
+          // Se for erro de autenticação, redirecionar para login
+          if (error.response?.status === 401) {
+            toast.value.showError('Sessão expirada. Faça login novamente.')
+            authStore.logout()
+            router.push('/login')
+          } else {
+            toast.value.showError(errorMsg)
+          }
         }
       }
     }
@@ -219,7 +234,15 @@ export default {
         await loadContatos()
       } catch (error) {
         const errorMsg = error.response?.data?.message || 'Erro ao salvar contato'
-        if (toast.value) toast.value.showError(errorMsg)
+        
+        // Se for erro de autenticação, redirecionar para login
+        if (error.response?.status === 401) {
+          toast.value.showError('Sessão expirada. Faça login novamente.')
+          authStore.logout()
+          router.push('/login')
+        } else {
+          toast.value.showError(errorMsg)
+        }
       } finally {
         formLoading.value = false
       }
@@ -243,7 +266,15 @@ export default {
         }
       } catch (error) {
         const errorMsg = error.response?.data?.message || 'Erro ao excluir contato'
-        if (toast.value) toast.value.showError(errorMsg)
+        
+        // Se for erro de autenticação, redirecionar para login
+        if (error.response?.status === 401) {
+          toast.value.showError('Sessão expirada. Faça login novamente.')
+          authStore.logout()
+          router.push('/login')
+        } else {
+          toast.value.showError(errorMsg)
+        }
       }
     }
 
@@ -278,8 +309,14 @@ export default {
     }
 
     // Lifecycle
-    onMounted(() => {
-      loadContatos()
+    onMounted(async () => {
+      // Verificar autenticação antes de carregar contatos
+      if (!authStore.isAuthenticated) {
+        router.push('/login')
+        return
+      }
+      
+      await loadContatos()
     })
 
     return {
@@ -290,6 +327,9 @@ export default {
       filters,
       sortOptions,
       toast,
+      
+      // Stores
+      authStore, // ← Expor authStore para template
       
       // Computed
       filteredContatos,
@@ -342,5 +382,12 @@ export default {
   padding: 1rem;
   border-radius: 8px;
   border: 1px solid var(--surface-200);
+}
+
+/* Responsividade para nome do usuário */
+@media (max-width: 768px) {
+  .toolbar .text-white.mr-3 {
+    display: none;
+  }
 }
 </style>
