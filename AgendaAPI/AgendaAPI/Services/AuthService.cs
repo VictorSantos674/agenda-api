@@ -5,8 +5,7 @@ using System.Text;
 using AgendaAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using AgendaAPI.Data;
-using System.Security.Cryptography;
-using BCrypt.Net; 
+using BCrypt.Net;
 
 namespace AgendaAPI.Services
 {
