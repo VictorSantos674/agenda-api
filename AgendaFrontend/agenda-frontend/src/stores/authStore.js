@@ -22,18 +22,27 @@ export const useAuthStore = defineStore('auth', () => {
   const login = async (credentials) => {
     loading.value = true
     try {
+      console.log('📤 Enviando credenciais:', credentials) 
+      console.log('🌐 API URL:', import.meta.env.VITE_API_BASE_URL) 
+      
       const response = await authService.login(credentials)
+      console.log('📥 Resposta recebida:', response) 
       
       token.value = response.token
       user.value = response.usuario
       isAuthenticated.value = true
 
-      // Salvar no localStorage
       localStorage.setItem('authToken', response.token)
       localStorage.setItem('userData', JSON.stringify(response.usuario))
 
       return response
     } catch (error) {
+      console.error('❌ Erro completo no login:', error)
+      console.error('📊 Dados do erro:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      })
       throw error
     } finally {
       loading.value = false
