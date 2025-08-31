@@ -58,7 +58,7 @@
 <script>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/authStore'
+import { useAuthStore } from '../../stores/authStore'
 import { useToast } from 'primevue/usetoast'
 
 export default {
@@ -70,7 +70,7 @@ export default {
 
     const credentials = reactive({
       email: '',
-      password: ''
+      senha: ''  // ← ALTERADO de 'password' para 'senha'
     })
 
     const errors = reactive({})
@@ -78,8 +78,8 @@ export default {
 
     const validateForm = () => {
       errors.email = !credentials.email ? 'Email é obrigatório' : ''
-      errors.password = !credentials.password ? 'Senha é obrigatória' : ''
-      return !errors.email && !errors.password
+      errors.senha = !credentials.senha ? 'Senha é obrigatória' : ''  // ← ALTERADO
+      return !errors.email && !errors.senha  // ← ALTERADO
     }
 
     const handleLogin = async () => {
@@ -98,10 +98,20 @@ export default {
 
         router.push('/contatos')
       } catch (error) {
+        // MELHORIA: Log detalhado do erro
+        console.error('Erro completo no login:', error)
+        
+        let errorMessage = 'Credenciais inválidas'
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message
+        } else if (error.message.includes('Network Error')) {
+          errorMessage = 'Servidor indisponível. Verifique se o backend está rodando.'
+        }
+        
         toast.add({
           severity: 'error',
           summary: 'Erro no login',
-          detail: error.response?.data?.message || 'Credenciais inválidas',
+          detail: errorMessage,
           life: 5000
         })
       } finally {
